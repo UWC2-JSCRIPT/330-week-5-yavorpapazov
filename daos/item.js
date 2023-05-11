@@ -20,4 +20,4 @@ module.exports.createItem = async (item) => {
 module.exports.updateById = async (itemId, newObj) => {
     await Item.updateOne({ _id: itemId }, newObj);
     return true
-  }
+}
