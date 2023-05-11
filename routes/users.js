@@ -42,9 +42,8 @@ router.post("/", async (req, res, next) => {
                     email: userData.email,
                     roles: userData.roles
                 }
-                const secret = "secret123"
+                const secret = "secret123";
                 const token = jwt.sign(user, secret);
-                const decodeToken = jwt.decode(token)
                 res.json({ token: token });
             }
         } catch(e) {
@@ -53,7 +52,11 @@ router.post("/", async (req, res, next) => {
     }
 });
 
-router.use(async function (req, res, next) {
+router.post("/logout", async (req, res, next) => {
+    res.sendStatus(404);
+});
+
+router.use(function (req, res, next) {
     if (!req.headers.authorization) {
         res.sendStatus(401);
     } else {
@@ -62,7 +65,7 @@ router.use(async function (req, res, next) {
         if (tokenString) {
             jwt.verify(tokenString, secret, (err, userData) => {
                 if (err) {
-                    return res.sendStatus(403);
+                    res.sendStatus(401);
                 } else {
                     req.userData = userData;
                     next();
@@ -74,24 +77,18 @@ router.use(async function (req, res, next) {
     }
 });
 
-router.post("/orders", async (req, res, next) => {
-    console.log(req.userData)
-    res.send('All orders');
+router.post("/password", async (req, res, next) => {
+    if (!req.body.password || JSON.stringify(req.body.password) === '' ) {
+        res.status(400).send('password is required');
+    } else {
+        try {
+            const hashedPassword = await bcrypt.hash(req.body.password, 10);
+            const success = await userDAO.updateUserPassword(req.userData._id, hashedPassword);
+            res.sendStatus(success ? 200 : 401);
+        } catch(e) {
+            res.status(500).send(e.message);
+        }
+    }
 });
-// router.post("/password", async (req, res, next) => {
-//     if (!req.body.password || JSON.stringify(req.body.password) === '' ) {
-//         res.status(400).send('password is required');
-//     } else if (!req.userId) {
-//         res.status(401).send("token doesn't match");
-//     } else {
-//         try {
-//             const hashedPassword = await bcrypt.hash(req.body.password, 10);
-//             const success = await userDAO.updateUserPassword(req.userId, hashedPassword);
-//             res.sendStatus(success ? 200 : 401);
-//         } catch(e) {
-//             res.status(500).send(e.message);
-//         }
-//     }
-// });
 
 module.exports = router;
