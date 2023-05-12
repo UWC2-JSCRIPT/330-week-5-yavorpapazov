@@ -26,20 +26,34 @@ router.use(function (req, res, next) {
 
 router.post("/", async (req, res, next) => {
     try {
-        console.log(req.body._id)
-        console.log(req.userData)
-        let item = await orderDAO.getById(req.body._id);
-        console.log(item)
-        let order = {
-            userId: req.userData._id,
-            items: [req.body._id],
-            total: item.price
+        let total = 0
+        let repeatObj = {}
+        for(let i of req.body.items) {
+            let item = await orderDAO.getItemById(i)
+            if (!item) {
+                res.sendStatus(400);
+            }
+            if (i in repeatObj) {
+                repeatObj[i] = repeatObj[i] + 1
+            } else {
+                repeatObj[i] = 1
+            }
+            total = total + item.price
         }
-        console.log(order)
-        const savedOrder = await orderDAO.createItem(order);
-        res.json(savedOrder);
+        console.log(repeatObj)
+        console.log(Object.values(repeatObj))
+        console.log(req.userData.roles)
+        //if (req.userData.roles.includes('admin')) {
+        const orderData = {
+            userId: req.userData._id,
+            items: req.body.items,
+            total: total
+        }
+        res.json(orderData);
+        // const savedOrder = await orderDAO.createOrder(orderData);
+        // res.json(savedOrder);
     } catch(e) {
-        res.status(401).send(e.message);
+        res.status(500).send(e.message);
     }
 });
 
