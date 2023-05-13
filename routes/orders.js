@@ -26,32 +26,40 @@ router.use(function (req, res, next) {
 
 router.post("/", async (req, res, next) => {
     try {
-        let total = 0
-        let repeatObj = {}
+        let total = 0;
+        let repeatObj = {};
         for(let i of req.body.items) {
-            let item = await orderDAO.getItemById(i)
+            let item = await orderDAO.getItemById(i);
             if (!item) {
                 res.sendStatus(400);
             }
             if (i in repeatObj) {
-                repeatObj[i] = repeatObj[i] + 1
+                repeatObj[i] = repeatObj[i] + 1;
             } else {
-                repeatObj[i] = 1
+                repeatObj[i] = 1;
             }
-            total = total + item.price
+            total = total + item.price;
         }
-        console.log(repeatObj)
-        console.log(Object.values(repeatObj))
-        console.log(req.userData.roles)
-        //if (req.userData.roles.includes('admin')) {
-        const orderData = {
-            userId: req.userData._id,
-            items: req.body.items,
-            total: total
+        const repeated = Object.values(repeatObj).some(item => item > 1);
+        if (repeated && req.userData.roles.includes('admin')) {
+            const orderData = {
+                userId: req.userData._id,
+                items: req.body.items,
+                total: total
+            }
+            const savedOrder = await orderDAO.createOrder(orderData);
+            res.json(savedOrder);
+        } else if (!repeated && !req.userData.roles.includes('admin')) {
+            const orderData = {
+                userId: req.userData._id,
+                items: req.body.items,
+                total: total
+            }
+            const savedOrder = await orderDAO.createOrder(orderData);
+            res.json(savedOrder);
+        } else {
+            res.sendStatus(403);
         }
-        res.json(orderData);
-        // const savedOrder = await orderDAO.createOrder(orderData);
-        // res.json(savedOrder);
     } catch(e) {
         res.status(500).send(e.message);
     }
