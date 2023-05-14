@@ -13,7 +13,12 @@ module.exports.createOrder = async (item) => {
     return created
 }
 
-// module.exports.getAll = async () => {
-//     const items = await Item.find().lean();
-//     return items
-// }
+module.exports.getAllByUserId = async (userId) => {
+    const orders = await Order.find({ userId }).lean();
+    return orders
+}
+
+module.exports.getAll = async () => {
+    const orders = await Order.find().lean();
+    return orders
+}

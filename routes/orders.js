@@ -27,21 +27,22 @@ router.use(function (req, res, next) {
 router.post("/", async (req, res, next) => {
     try {
         let total = 0;
-        let repeatObj = {};
+        //let repeatObj = {};
+        let itemsSet = new Set(req.body.items);
         for(let i of req.body.items) {
             let item = await orderDAO.getItemById(i);
             if (!item) {
                 res.sendStatus(400);
             }
-            if (i in repeatObj) {
-                repeatObj[i] = repeatObj[i] + 1;
-            } else {
-                repeatObj[i] = 1;
-            }
+            // if (i in repeatObj) {
+            //     repeatObj[i] = repeatObj[i] + 1;
+            // } else {
+            //     repeatObj[i] = 1;
+            // }
             total = total + item.price;
         }
-        const repeated = Object.values(repeatObj).some(item => item > 1);
-        if (repeated && req.userData.roles.includes('admin')) {
+        //const repeated = Object.values(repeatObj).some(item => item > 1);
+        if (req.userData.roles.includes('admin')) {
             const orderData = {
                 userId: req.userData._id,
                 items: req.body.items,
@@ -49,7 +50,7 @@ router.post("/", async (req, res, next) => {
             }
             const savedOrder = await orderDAO.createOrder(orderData);
             res.json(savedOrder);
-        } else if (!repeated && !req.userData.roles.includes('admin')) {
+        } else if (itemsSet.size === req.body.items.length && !req.userData.roles.includes('admin')) {
             const orderData = {
                 userId: req.userData._id,
                 items: req.body.items,
@@ -82,13 +83,26 @@ router.post("/", async (req, res, next) => {
 //     }
 // });
 
-// router.get("/", async (req, res, next) => {
-//     try {
-//         const items = await itemDAO.getAll();
-//         res.json(items);
-//     } catch(e) {
-//         res.status(500).send(e.message);
-//     }
-// });
+router.get("/", async (req, res, next) => {
+    try {
+        if (!req.userData.roles.includes('admin')) {
+            const orders = await orderDAO.getAllByUserId(req.userData._id);
+            const ordersNew = orders.map(item => {
+                const itemsNew = item.items.map(element => element.toString())
+                return {
+                    items: itemsNew,
+                    userId: item.userId.toString(),
+                    total: item.total
+                }
+            })
+            res.json(ordersNew);
+        } else {
+            const orders = await orderDAO.getAll(req.userData._id);
+            res.json(orders);
+        }
+    } catch(e) {
+        res.status(500).send(e.message);
+    }
+});
 
 module.exports = router;
