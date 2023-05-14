@@ -74,21 +74,29 @@ router.post("/", async (req, res, next) => {
 //     }
 // });
 
-// router.get("/:id", async (req, res, next) => {
-//     try {
-//         const item = await itemDAO.getById(req.params.id);
-//         res.json(item);
-//     } catch(e) {
-//         res.status(500).send(e.message);
-//     }
-// });
+router.get("/:id", async (req, res, next) => {
+    try {
+        const orderByIdAndUserId = await orderDAO.getOrderByIdAndUserId(req.params.id, req.userData._id);
+        if (req.userData.roles.includes('admin')) {
+            const order = await orderDAO.getOrderById(req.params.id);
+            res.json(order);
+        } else if (!req.userData.roles.includes('admin') && orderByIdAndUserId) {
+            const order = await orderDAO.getOrderById(req.params.id);
+            res.json(order);
+        } else {
+            res.sendStatus(404);
+        }
+    } catch(e) {
+        res.status(500).send(e.message);
+    }
+});
 
 router.get("/", async (req, res, next) => {
     try {
         if (!req.userData.roles.includes('admin')) {
             const orders = await orderDAO.getAllByUserId(req.userData._id);
             const ordersNew = orders.map(item => {
-                const itemsNew = item.items.map(element => element.toString())
+                const itemsNew = item.items.map(element => element.toString());
                 return {
                     items: itemsNew,
                     userId: item.userId.toString(),
@@ -98,7 +106,15 @@ router.get("/", async (req, res, next) => {
             res.json(ordersNew);
         } else {
             const orders = await orderDAO.getAll(req.userData._id);
-            res.json(orders);
+            const ordersNew = orders.map(item => {
+                const itemsNew = item.items.map(element => element.toString());
+                return {
+                    items: itemsNew,
+                    userId: item.userId.toString(),
+                    total: item.total
+                }
+            })
+            res.json(ordersNew);
         }
     } catch(e) {
         res.status(500).send(e.message);
