@@ -27,33 +27,26 @@ router.use(function (req, res, next) {
 router.post("/", async (req, res, next) => {
     try {
         let total = 0;
-        //let repeatObj = {};
-        let itemsSet = new Set(req.body.items);
-        for(let i of req.body.items) {
+        let itemsSet = new Set(req.body);
+        for(let i of req.body) {
             let item = await orderDAO.getItemById(i);
             if (!item) {
-                res.sendStatus(400);
+                return res.sendStatus(400);
             }
-            // if (i in repeatObj) {
-            //     repeatObj[i] = repeatObj[i] + 1;
-            // } else {
-            //     repeatObj[i] = 1;
-            // }
             total = total + item.price;
         }
-        //const repeated = Object.values(repeatObj).some(item => item > 1);
         if (req.userData.roles.includes('admin')) {
             const orderData = {
                 userId: req.userData._id,
-                items: req.body.items,
+                items: req.body,
                 total: total
             }
             const savedOrder = await orderDAO.createOrder(orderData);
             res.json(savedOrder);
-        } else if (itemsSet.size === req.body.items.length && !req.userData.roles.includes('admin')) {
+        } else if (itemsSet.size === req.body.length && !req.userData.roles.includes('admin')) {
             const orderData = {
                 userId: req.userData._id,
-                items: req.body.items,
+                items: req.body,
                 total: total
             }
             const savedOrder = await orderDAO.createOrder(orderData);
@@ -65,14 +58,6 @@ router.post("/", async (req, res, next) => {
         res.status(500).send(e.message);
     }
 });
-
-// router.use(function (req, res, next) {
-//     if (req.userData.roles.includes('admin')) {
-//         next();
-//     } else {
-//         res.sendStatus(403);
-//     }
-// });
 
 router.get("/:id", async (req, res, next) => {
     try {
@@ -87,6 +72,7 @@ router.get("/:id", async (req, res, next) => {
             res.sendStatus(404);
         }
     } catch(e) {
+        console.log(e.message)
         res.status(500).send(e.message);
     }
 });
@@ -105,7 +91,7 @@ router.get("/", async (req, res, next) => {
             })
             res.json(ordersNew);
         } else {
-            const orders = await orderDAO.getAll(req.userData._id);
+            const orders = await orderDAO.getAll();
             const ordersNew = orders.map(item => {
                 const itemsNew = item.items.map(element => element.toString());
                 return {
