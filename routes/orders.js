@@ -60,20 +60,27 @@ router.post("/", async (req, res, next) => {
 });
 
 router.get("/:id", async (req, res, next) => {
-    try {
-        const orderByIdAndUserId = await orderDAO.getOrderByIdAndUserId(req.params.id, req.userData._id);
-        if (req.userData.roles.includes('admin')) {
+    console.log(req.params.id)
+    if (!req.params.id) {
+        res.sendStatus(400);
+    } else {
+        try {
             const order = await orderDAO.getOrderById(req.params.id);
-            res.json(order);
-        } else if (!req.userData.roles.includes('admin') && orderByIdAndUserId) {
-            const order = await orderDAO.getOrderById(req.params.id);
-            res.json(order);
-        } else {
-            res.sendStatus(404);
+            console.log(order)
+            if (!order) {
+                res.sendStatus(400);
+            }
+            if (req.userData.roles.includes('admin')) {
+                res.json(order);
+            } else if (!req.userData.roles.includes('admin') && req.userData._id === order.userId.toString()) {
+                res.json(order);
+            } else {
+                res.sendStatus(404);
+            }
+        } catch(e) {
+            console.log(e.message)
+            res.status(500).send(e.message);
         }
-    } catch(e) {
-        console.log(e.message)
-        res.status(500).send(e.message);
     }
 });
 

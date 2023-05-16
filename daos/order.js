@@ -35,8 +35,3 @@ module.exports.getOrderById = async (orderId) => {
     order.items = itemList;
     return order
 }
-
-module.exports.getOrderByIdAndUserId = async (orderId, userId) => {
-    const order = await Order.findOne({ _id: orderId, userId }).lean();
-    return order
-}
