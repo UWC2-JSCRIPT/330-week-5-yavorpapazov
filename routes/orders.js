@@ -28,7 +28,8 @@ router.post("/", async (req, res, next) => {
     try {
         let total = 0;
         let itemsSet = new Set(req.body);
-        for(let i of req.body) {
+        const items = req.body
+        for(let i of items) {
             let item = await orderDAO.getItemById(i);
             if (!item) {
                 return res.sendStatus(400);
@@ -38,15 +39,16 @@ router.post("/", async (req, res, next) => {
         if (req.userData.roles.includes('admin')) {
             const orderData = {
                 userId: req.userData._id,
-                items: req.body,
+                items: items,
                 total: total
             }
             const savedOrder = await orderDAO.createOrder(orderData);
             res.json(savedOrder);
-        } else if (itemsSet.size === req.body.length && !req.userData.roles.includes('admin')) {
+        } 
+        else if (itemsSet.size === items.length && !req.userData.roles.includes('admin')) {
             const orderData = {
                 userId: req.userData._id,
-                items: req.body,
+                items: items,
                 total: total
             }
             const savedOrder = await orderDAO.createOrder(orderData);
@@ -55,6 +57,7 @@ router.post("/", async (req, res, next) => {
             res.sendStatus(403);
         }
     } catch(e) {
+        console.log(e.message)
         res.status(500).send(e.message);
     }
 });
