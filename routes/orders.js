@@ -27,7 +27,6 @@ router.use(function (req, res, next) {
 router.post("/", async (req, res, next) => {
     try {
         let total = 0;
-        let itemsSet = new Set(req.body);
         const items = req.body
         for(let i of items) {
             let item = await orderDAO.getItemById(i);
@@ -36,28 +35,18 @@ router.post("/", async (req, res, next) => {
             }
             total = total + item.price;
         }
-        if (req.userData.roles.includes('admin')) {
-            const orderData = {
-                userId: req.userData._id,
-                items: items,
-                total: total
-            }
-            const savedOrder = await orderDAO.createOrder(orderData);
-            res.json(savedOrder);
-        } 
-        else if (itemsSet.size === items.length && !req.userData.roles.includes('admin')) {
-            const orderData = {
-                userId: req.userData._id,
-                items: items,
-                total: total
-            }
-            const savedOrder = await orderDAO.createOrder(orderData);
-            res.json(savedOrder);
-        } else {
-            res.sendStatus(403);
+        const orderData = {
+            userId: req.userData._id,
+            items: items,
+            total: total
         }
+        const savedOrder = await orderDAO.createOrder(orderData);
+        res.json(savedOrder);
+        // } else {
+        //     console.log('ERROR')
+        //     res.sendStatus(403);
+        // }
     } catch(e) {
-        console.log(e.message)
         res.status(500).send(e.message);
     }
 });
