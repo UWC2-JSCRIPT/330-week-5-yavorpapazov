@@ -25,6 +25,9 @@ module.exports.getAll = async () => {
 }
 
 module.exports.getOrderById = async (orderId) => {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        return null
+    }
     const order = await Order.findOne({ _id: orderId }).lean();
     const items = await Item.find({ _id: { $in: order.items } }).lean();
     const itemList = [];
