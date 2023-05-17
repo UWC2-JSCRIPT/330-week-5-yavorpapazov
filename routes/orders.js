@@ -42,10 +42,6 @@ router.post("/", async (req, res, next) => {
         }
         const savedOrder = await orderDAO.createOrder(orderData);
         res.json(savedOrder);
-        // } else {
-        //     console.log('ERROR')
-        //     res.sendStatus(403);
-        // }
     } catch(e) {
         res.status(500).send(e.message);
     }
