@@ -21,7 +21,9 @@
       "/node_modules/"
     ],
     "preset": "@shelf/jest-mongodb",
-    "watchPathIgnorePatterns": ["globalConfig"]
+    "watchPathIgnorePatterns": [
+      "globalConfig"
+    ]
   },
   "dependencies": {
     "bcrypt": "^5.1.0",
